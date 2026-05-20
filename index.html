@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>XOXO</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f0e8d8;
+    --text: #ddd5c5;
+    --dim: #5a5248;
+    --surface: #0f0e0a;
+    --border: #1a1710;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: #080808; }
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Courier Prime', monospace;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.05) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #introScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 30px;
+    text-align: center;
+  }
+  .intro-eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 22px;
+    animation: fadeUp 1s ease both;
+  }
+  .xoxo-big {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(5.5rem, 24vw, 11rem);
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 0.88;
+    letter-spacing: 0.04em;
+    animation: fadeUp 1.2s ease both 0.1s, glowPulse 3s ease-in-out infinite alternate;
+  }
+  @keyframes glowPulse {
+    from { text-shadow: 0 0 40px rgba(201,168,76,0.12); }
+    to   { text-shadow: 0 0 100px rgba(201,168,76,0.5), 0 0 200px rgba(201,168,76,0.12); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .intro-divider {
+    width: 70px; height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+    margin: 26px auto;
+    animation: fadeUp 1s ease both 0.5s;
+  }
+  .intro-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(0.92rem, 3.8vw, 1.15rem);
+    color: var(--cream);
+    line-height: 2.1;
+    max-width: 320px;
+    animation: fadeUp 1s ease both 0.8s;
+  }
+  .intro-text em { color: var(--gold); font-style: normal; }
+  .start-btn {
+    margin-top: 42px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.76rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    padding: 15px 38px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: color 0.3s;
+    animation: fadeUp 1s ease both 1.2s;
+  }
+  .start-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s ease;
+    z-index: -1;
+  }
+  .start-btn:hover { color: var(--black); }
+  .start-btn:hover::before { transform: scaleX(1); }
+
+  #chatScreen {
+    display: none;
+    flex-direction: column;
+    height: 100dvh;
+    position: relative;
+    z-index: 1;
+  }
+  .chat-header {
+    background: #0a0a08;
+    border-bottom: 1px solid var(--border);
+    padding: 11px 15px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    flex-shrink: 0;
+  }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #2a1e08, #0e0c04);
+    border: 1.5px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--gold);
+    flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(201,168,76,0.15);
+  }
+  .header-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--cream);
+  }
+  .header-status { font-size: 0.67rem; color: #5a9a5a; letter-spacing: 0.08em; }
+  .header-right {
+    margin-left: auto;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.65rem;
+    color: var(--dim);
+    text-align: right;
+    line-height: 1.6;
+  }
+  .header-right span { color: var(--gold); display: block; }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 13px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    scroll-behavior: smooth;
+  }
+  .messages::-webkit-scrollbar { width: 2px; }
+  .messages::-webkit-scrollbar-thumb { background: #1e1e1e; }
+
+  .bubble {
+    max-width: 86%;
+    padding: 11px 15px;
+    line-height: 1.78;
+    font-size: 0.875rem;
+    border-radius: 2px;
+    opacity: 0;
+    transform: translateY(7px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .bubble.show { opacity: 1; transform: translateY(0); }
+  .bubble.xoxo {
+    background: var(--surface);
+    border-left: 2px solid var(--gold);
+    align-self: flex-start;
+    color: var(--cream);
+  }
+  .bubble.user {
+    background: #0e0e1c;
+    border-right: 2px solid #323268;
+    align-self: flex-end;
+    color: #b8b8d8;
+  }
+  .btime {
+    font-size: 0.58rem;
+    color: var(--dim);
+    margin-top: 5px;
+    display: block;
+  }
+
+  .typing {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    padding: 11px 15px;
+    background: var(--surface);
+    border-left: 2px solid var(--gold);
+    align-self: flex-start;
+    border-radius: 2px;
+    max-width: 70px;
+  }
+  .typing.show { display: flex; }
+  .tdot {
+    width: 5px; height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: tdbounce 1.2s infinite;
+  }
+  .tdot:nth-child(2) { animation-delay: 0.2s; }
+  .tdot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes tdbounce {
+    0%,80%,100% { transform: translateY(0); opacity: 0.25; }
+    40% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  .input-area {
+    padding: 9px 13px 13px;
+    background: #0a0a08;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .msg-input {
+    flex: 1;
+    background: #080806;
+    border: 1px solid #1a1a12;
+    color: var(--cream);
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.9rem;
+    padding: 10px 13px;
+    outline: none;
+    transition: border-color 0.3s;
+    border-radius: 2px;
+    resize: none;
+    min-height: 42px;
+    max-height: 90px;
+  }
+  .msg-input:focus { border-color: var(--gold); }
+  .msg-input::placeholder { color: var(--dim); }
+  .send-btn {
+    background: var(--gold);
+    border: none;
+    color: var(--black);
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0 17px;
+    cursor: pointer;
+    transition: background 0.25s;
+    border-radius: 2px;
+    flex-shrink: 0;
+    min-width: 48px;
+  }
+  .send-btn:hover { background: var(--gold-light); }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div id="introScreen">
+  <div class="intro-eyebrow">transmission chiffrée · destinataire unique</div>
+  <div class="xoxo-big">XOXO</div>
+  <div class="intro-divider"></div>
+  <div class="intro-text">
+    Tu as été repérée,<br>
+    <em>Clémentine.</em><br><br>
+    Cette nuit ne ressemble<br>à aucune autre.
+  </div>
+  <button class="start-btn" onclick="startChat()">OUVRIR LE MESSAGE</button>
+</div>
+
+<div id="chatScreen">
+  <div class="chat-header">
+    <div class="avatar">✦</div>
+    <div>
+      <div class="header-name">XOXO</div>
+      <div class="header-status">● en ligne</div>
+    </div>
+    <div class="header-right">
+      You know you love me
+      <span>— Gossip Girl</span>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="typing" id="typing">
+      <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <textarea
+      class="msg-input"
+      id="msgInput"
+      placeholder="Tape ta réponse..."
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"
+    ></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<script>
+let conversationHistory = [];
+let isWaiting = false;
+
+function getTime() {
+  return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function startChat() {
+  document.getElementById('introScreen').style.display = 'none';
+  const chat = document.getElementById('chatScreen');
+  chat.style.display = 'flex';
+  sendToAPI(null, true);
+}
+
+function addBubble(text, sender) {
+  const messages = document.getElementById('messages');
+  const typing = document.getElementById('typing');
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${sender}`;
+  bubble.innerHTML = `${text}<span class="btime">${getTime()}</span>`;
+  messages.insertBefore(bubble, typing);
+  requestAnimationFrame(() => requestAnimationFrame(() => bubble.classList.add('show')));
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showTyping(show) {
+  const t = document.getElementById('typing');
+  t.className = show ? 'typing show' : 'typing';
+  if (show) document.getElementById('messages').scrollTop = 999999;
+}
+
+async function sendToAPI(userMessage, isFirst = false) {
+  if (isWaiting) return;
+  isWaiting = true;
+  const input = document.getElementById('msgInput');
+  const btn = document.getElementById('sendBtn');
+  if (input) input.disabled = true;
+  if (btn) btn.disabled = true;
+
+  if (userMessage) conversationHistory.push({ role: 'user', content: userMessage });
+
+  const messages = isFirst
+    ? [{ role: 'user', content: 'Commence la conversation avec Clémentine.' }]
+    : conversationHistory;
+
+  showTyping(true);
+  await new Promise(r => setTimeout(r, 1200 + Math.random() * 1400));
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages })
+    });
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || '✦ ...signal perdu.';
+    showTyping(false);
+    addBubble(reply, 'xoxo');
+    conversationHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    showTyping(false);
+    addBubble('✦ ...la connexion tremble. Réessaie.', 'xoxo');
+  }
+
+  isWaiting = false;
+  if (input) { input.disabled = false; input.focus(); }
+  if (btn) btn.disabled = false;
+}
+
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text || isWaiting) return;
+  addBubble(text, 'user');
+  input.value = '';
+  input.style.height = 'auto';
+  sendToAPI(text);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+}
+</script>
+</body>
+</html>
